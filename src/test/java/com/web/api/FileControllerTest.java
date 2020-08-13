@@ -1,44 +1,38 @@
 package com.web.api;
 
+import com.service.FileService;
+import com.web.ResponseMessage;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ContextConfiguration()
-@WebMvcTest()
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class FileControllerTest {
 
-    @Autowired
-    MockMvc mockMvc;
+    @InjectMocks
+    FileController fileController;
 
-    //doesn't work
+    @Mock
+    FileService fileService;
+
     @Test
-    public void fileUploadTest() throws Exception {
+    public void fileUploadTest() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         MockMultipartFile file = new MockMultipartFile("filename", "filename.txt", "text/plain", "text".getBytes());
+        ResponseEntity<ResponseMessage> responseEntity = fileController.fileUpload(file);
 
-        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart("/api/files/upload");
-        builder.with(new RequestPostProcessor() {
-            @Override
-            public MockHttpServletRequest postProcessRequest(MockHttpServletRequest request) {
-                request.setMethod("PUT");
-                return request;
-            }
-        });
-        mockMvc.perform(builder
-                .file(file))
-                .andExpect(status().is(200));
+        assertEquals(responseEntity.getStatusCode(), HttpStatus.OK);
     }
 }

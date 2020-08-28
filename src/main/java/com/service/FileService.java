@@ -21,9 +21,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @PropertySource(value = {"classpath:application.properties"})
@@ -41,22 +39,24 @@ public class FileService {
     private FileAuditRepository fileAuditRepository;
 
     public List<FileDto> getFiles(final Optional<String> fileName, final Optional<Integer> minSizeKb, final Optional<Integer> maxSizeKb) {
-        final List<File> files = fileRepository.findAll();
+        if (fileName.isPresent()) {
+            if  (minSizeKb.isPresent() && maxSizeKb.isPresent() && minSizeKb.get() <= maxSizeKb.get()) {
+                final Optional<File> file = fileRepository.findOneByNameRange(fileName.get(), minSizeKb.get(), maxSizeKb.get());
+                if (file.isPresent()) {
+                    return new ArrayList<>(Collections.singleton(file.get().toDto()));
+                }
+            }
+            final Optional<File> file = fileRepository.findOneByName(fileName.get());
+            if (file.isPresent()) {
+                return new ArrayList<>(Collections.singleton(file.get().toDto()));
+            }
+        }
+        if  (minSizeKb.isPresent() && maxSizeKb.isPresent() && minSizeKb.get() <= maxSizeKb.get()) {
+            final List<File> files = fileRepository.findOneByRange(minSizeKb.get(), maxSizeKb.get());
+            return files.stream().map(File::toDto).collect(Collectors.toList());
+        }
 
-        return files.stream()
-                .filter(t -> {
-                    boolean filterByName = true;
-                    boolean filterBySize = true;
-                    if (fileName.isPresent() && !"".equals(fileName.get())) {
-                        filterByName = t.getName().equals(fileName.get());
-                    }
-                    if (minSizeKb.isPresent() && maxSizeKb.isPresent() && minSizeKb.get() <= maxSizeKb.get()) {
-                        filterBySize = t.getSizeInKb() >= minSizeKb.get() && t.getSizeInKb() <= maxSizeKb.get();
-                    }
-                    return filterByName && filterBySize;
-                })
-                .map(File::toDto)
-                .collect(Collectors.toList());
+        return fileRepository.findAll().stream().map(File::toDto).collect(Collectors.toList());
     }
 
     public Resource getFile(final UUID fileUuid) throws NotFoundException, MalformedURLException {

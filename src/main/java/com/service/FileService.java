@@ -40,7 +40,7 @@ public class FileService {
 
     public List<FileDto> getFiles(final Optional<String> fileName, final Optional<Integer> minSizeKb, final Optional<Integer> maxSizeKb) {
         if (fileName.isPresent()) {
-            if  (minSizeKb.isPresent() && maxSizeKb.isPresent() && minSizeKb.get() <= maxSizeKb.get()) {
+            if (minSizeKb.isPresent() && maxSizeKb.isPresent() && minSizeKb.get() <= maxSizeKb.get()) {
                 final Optional<File> file = fileRepository.findOneByNameRange(fileName.get(), minSizeKb.get(), maxSizeKb.get());
                 if (file.isPresent()) {
                     return new ArrayList<>(Collections.singleton(file.get().toDto()));
@@ -51,7 +51,7 @@ public class FileService {
                 return new ArrayList<>(Collections.singleton(file.get().toDto()));
             }
         }
-        if  (minSizeKb.isPresent() && maxSizeKb.isPresent() && minSizeKb.get() <= maxSizeKb.get()) {
+        if (minSizeKb.isPresent() && maxSizeKb.isPresent() && minSizeKb.get() <= maxSizeKb.get()) {
             final List<File> files = fileRepository.findOneByRange(minSizeKb.get(), maxSizeKb.get());
             return files.stream().map(File::toDto).collect(Collectors.toList());
         }
@@ -67,7 +67,7 @@ public class FileService {
             final Path root = Paths.get(filePathUpload);
             final Path filePath = root.resolve(file.getName()).normalize();
             final Resource resource = new UrlResource(filePath.toUri());
-            if(resource.exists()) {
+            if (resource.exists()) {
                 saveFileAudit(file);
                 return resource;
             }

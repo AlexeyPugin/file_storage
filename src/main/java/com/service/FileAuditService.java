@@ -18,7 +18,6 @@ public class FileAuditService {
 
     public List<FileAuditDto> getFileAuditNames() {
         final List<FileAudit> files = fileAuditRepository.findAll();
-
         return files.stream().map(FileAudit::toDto).collect(Collectors.toList());
     }
 }

@@ -27,7 +27,7 @@ public class FileController {
     @GetMapping(value = "/files")
     private ResponseEntity<List<FileDto>> getFiles(@RequestParam(value = "fileName") final Optional<String> fileName,
                                                    @RequestParam(value = "minSizeKb") final Optional<Integer> minSizeKb,
-                                                   @RequestParam(value ="maxSizeKb") final Optional<Integer> maxSizeKb) {
+                                                   @RequestParam(value = "maxSizeKb") final Optional<Integer> maxSizeKb) {
         final List<FileDto> fileDtos = fileService.getFiles(fileName, minSizeKb, maxSizeKb);
         return new ResponseEntity<>(fileDtos, HttpStatus.OK);
     }
@@ -35,30 +35,26 @@ public class FileController {
     @GetMapping(value = "/files/{fileUuid}")
     private ResponseEntity<Resource> getFile(@PathVariable UUID fileUuid) throws NotFoundException, MalformedURLException {
         final Resource file = fileService.getFile(fileUuid);
-        if(file.exists()) {
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-                    .body(file);
-        } else {
-            throw new NotFoundException("File " + fileUuid + " not found");
-        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+                .body(file);
     }
 
-    @PutMapping(value="/files/upload")
-    public ResponseEntity<ResponseMessage> fileUpload(@RequestParam("file") MultipartFile file){
+    @PutMapping(value = "/files/upload")
+    public ResponseEntity<ResponseMessage> fileUpload(@RequestParam("file") MultipartFile file) {
         String message;
         try {
             fileService.saveFile(file);
             message = "Uploaded the file successfully: " + file.getOriginalFilename();
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(message));
         } catch (Exception e) {
             message = file.getOriginalFilename() + " file has not been uploaded. Exception: " + e.getMessage();
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(new ResponseMessage(message));
         }
     }
 
-    @PostMapping(value="/files/upload")
-    public ResponseEntity<ResponseMessage> fileUpdate(@RequestParam("file") MultipartFile file){
+    @PostMapping(value = "/files/upload")
+    public ResponseEntity<ResponseMessage> fileUpdate(@RequestParam("file") MultipartFile file) {
         String message;
         try {
             fileService.updateFile(file);
